@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Capsule.h"
 #include <vector>
 #include <glm\vec2.hpp>
 
