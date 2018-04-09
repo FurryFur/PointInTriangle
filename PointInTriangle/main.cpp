@@ -1,25 +1,7 @@
-//
-// Copyright (c) 2013 Mikko Mononen memon@inside.org
-//
-// This software is provided 'as-is', without any express or implied
-// warranty.  In no event will the authors be held liable for any damages
-// arising from the use of this software.
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-// 1. The origin of this software must not be misrepresented; you must not
-//    claim that you wrote the original software. If you use this software
-//    in a product, an acknowledgment in the product documentation would be
-//    appreciated but is not required.
-// 2. Altered source versions must be plainly marked as such, and must not be
-//    misrepresented as being the original software.
-// 3. This notice may not be removed or altered from any source distribution.
-//
-
-
-#include "Capsule.h"
-#include "CapsuleFactory.h"
-#include "Line.h"
+#include "Triangle.h"
+#include "Point.h"
+#include "ShapeFactory.h"
+#include "Shape.h"
 
 #include <glm\glm.hpp>
 #include <glad\glad.h>
@@ -28,6 +10,7 @@
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg_gl.h>
 
+#include <iostream>
 
 using namespace glm;
 
@@ -46,7 +29,7 @@ void mouseBtnCallback(GLFWwindow* window, int button, int action, int mods)
 {
 	double mousex, mousey;
 	glfwGetCursorPos(window, &mousex, &mousey);
-	CapsuleFactory::instance().onClick(button, action, mousex, mousey);
+	ShapeFactory::instance().onClick(button, action, mousex, mousey);
 }
 
 int main()
@@ -89,7 +72,7 @@ int main()
 		return -1;
 	}
 
-
+	ShapeFactory& shapeFactory = ShapeFactory::instance();
 	while (!glfwWindowShouldClose(window)) {
 		int winWidth, winHeight;
 		int fbWidth, fbHeight;
@@ -107,14 +90,18 @@ int main()
 
 		nvgBeginFrame(vg, winWidth, winHeight, pxRatio);
 
-		const std::vector<Capsule>& capsuleList = CapsuleFactory::instance().getCapsuleList();
-		for (const Capsule& capsule : capsuleList) {
-			capsule.draw(vg);
+		const std::vector<std::unique_ptr<Shape>>& shapeList = shapeFactory.getShapeList();
+		for (auto& shape : shapeList) {
+			shape->draw(vg);
 		}
 
-		if (capsuleList.size() == 2) {
-			Line shortestLine = capsuleList[0].getShortestLineTo(capsuleList[1]);
-			shortestLine.draw(vg);
+		const Triangle* triangle = shapeFactory.getTriangle();
+		const Point* point = shapeFactory.getPoint();
+		if (triangle && point) {
+			if (point->inside(*triangle))
+				std::cout << "Point inside triangle" << std::endl;
+			else
+				std::cout << "Point outside triangle" << std::endl;
 		}
 
 		nvgEndFrame(vg);
